@@ -3,7 +3,7 @@ from numpy import array
 from numpy import argmax
 from numpy import array_equal
 from keras.models import Sequential
-from keras.layers import LSTM
+from keras.layers import LSTM, GRU
 from attention_decoder import AttentionDecoder
 
 
@@ -42,17 +42,23 @@ def get_pair(n_in, n_out, cardinality):
 n_features = 50
 n_timesteps_in = 5
 n_timesteps_out = 2
-n_input = 5000
+n_input = 1
 
 # define model
 model = Sequential()
-model.add(LSTM(150, input_shape=(n_timesteps_in, n_features), return_sequences=True))
+model.add(GRU(150, input_shape=(n_timesteps_in, n_features), return_sequences=True))
 model.add(AttentionDecoder(150, n_features))
 model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['acc'])
-# train LSTM
+
+# train GRU
 for epoch in range(n_input):
 	# generate new random sequence
 	X,y = get_pair(n_timesteps_in, n_timesteps_out, n_features)
+	print(X)
+	print(one_hot_decode(X[0]))
+	print()
+	print(y)
+	print(one_hot_decode(y[0]))	
 	# fit model for one epoch on this sequence
 	model.fit(X, y, epochs=1, verbose=2)
 # evaluate LSTM
