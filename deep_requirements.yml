@@ -1,0 +1,13 @@
+name: deep_learning_attention
+channels:
+- conda-forge
+- bioconda
+- defaults
+dependencies:    
+- python=3.6
+- tensorflow=2.0
+- keras=2.3.1
+- scikit-learn=0.22.1
+- h5py
+- csvkit
+- hyperopt
