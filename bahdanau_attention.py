@@ -17,21 +17,6 @@ gru_units = 32
 batch_size = 200
 embedding_size = 32
 
-
-'''class Attention(tf.keras.Model):
-    def __init__(self, units):
-        super(Attention, self).__init__()
-        self.W1 = tf.keras.layers.Dense(units)
-        self.W2 = tf.keras.layers.Dense(units)
-        self.V = tf.keras.layers.Dense(1)
-        
-    def call(self, features, hidden):
-        hidden_with_time_axis = tf.expand_dims(hidden, 1)
-        score = tf.nn.tanh(self.W1(features) + self.W2(hidden_with_time_axis))
-        attention_weights = tf.nn.softmax(self.V(score), axis=1)
-        context_vector = attention_weights * features
-        context_vector = tf.reduce_sum(context_vector, axis=1)
-        return context_vector, attention_weights'''
       
 class BahdanauAttention(tf.keras.layers.Layer):
     def __init__(self, units):
@@ -61,7 +46,7 @@ class BahdanauAttention(tf.keras.layers.Layer):
 
         return context_vector, attention_weights
 
- 
+
 (x_train, y_train), (x_test, y_test) = tf.keras.datasets.imdb.load_data(num_words=vocab_size, start_char=start_id,
                                                                         oov_char=oov_id, index_from=index_offset)
  
@@ -82,7 +67,7 @@ x_test = sequence.pad_sequences(x_test, maxlen=max_len,
                                 truncating='post',
                                 padding='post',
                                 value=pad_id)
-                                
+
 sequence_input = Input(shape=(max_len,), dtype='int32')
 embedded_sequences = tf.keras.layers.Embedding(vocab_size, embedding_size, input_length=max_len)(sequence_input)
 
@@ -95,8 +80,15 @@ GRU = tf.keras.layers.GRU(gru_units,
 
 sample_output, sample_hidden = GRU(embedded_sequences, initial_state=sample_hidden)
 
-attention = BahdanauAttention(gru_units)
-context_vector, attention_weights = attention(sample_hidden, sample_output)
+#attention = BahdanauAttention(gru_units)
+#context_vector, attention_weights = attention(sample_hidden, sample_output)
+
+encoder = Encoder(vocab_size+1, embedding_size, gru_units)
+initial_state = encoder.init_states(1)
+encoder_output, en_state_h, en_state_c = encoder(source_input, initial_state)
+
+attention = LuongAttention(gru_units)
+context_vector, attention_weights = attention(sample_output, sample_hidden)
 
 output = tf.keras.layers.Dense(1, activation='sigmoid')(context_vector)
 
@@ -104,8 +96,8 @@ model = tf.keras.Model(inputs=sequence_input, outputs=output)
 
 print(model.summary())
 
-model.compile(optimizer=tf.compat.v1.train.AdamOptimizer(), loss='binary_crossentropy', metrics=['accuracy'])
-history = model.fit(x_train, y_train, epochs=10, batch_size=batch_size, validation_data=(x_test, y_test), verbose=1)
+#model.compile(optimizer=tf.compat.v1.train.AdamOptimizer(), loss='binary_crossentropy', metrics=['accuracy'])
+#history = model.fit(x_train, y_train, epochs=10, batch_size=batch_size, validation_data=(x_test, y_test), verbose=1)
 
 '''class Encoder(tf.keras.Model):
     def __init__(self, vocab_size, embedding_dim, enc_units, batch_sz):
